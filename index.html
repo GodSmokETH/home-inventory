@@ -541,8 +541,12 @@
       </div>
     </div>
     <div class="field">
-      <label for="f-location">เก็บไว้ที่ไหน *</label>
-      <input type="text" id="f-location" placeholder="เช่น ตู้เย็นชั้น 2, ลิ้นชักทีวี, โรงรถ">
+      <div class="field-label-row">
+        <label for="f-location">เก็บไว้ที่ไหน *</label>
+        <button type="button" class="manage-link" id="manageLocBtn">จัดการสถานที่</button>
+      </div>
+      <select id="f-location"></select>
+      <input type="text" id="f-location-new" placeholder="พิมพ์ชื่อสถานที่เก็บใหม่ เช่น ตู้เย็นชั้น 2" style="display:none;margin-top:6px;">
     </div>
     <div class="field-row">
       <div class="field">
@@ -589,14 +593,30 @@
   </div>
 </div>
 
+<div class="overlay" id="locOverlay">
+  <div class="sheet">
+    <h2>จัดการสถานที่เก็บ</h2>
+    <div id="locList"></div>
+    <div class="cat-add-row">
+      <input type="text" id="locNewInput" placeholder="เพิ่มสถานที่เก็บใหม่">
+      <button type="button" id="locAddBtn">เพิ่ม</button>
+    </div>
+    <div class="form-actions">
+      <button class="btn-cancel" id="locCloseBtn" type="button">เสร็จสิ้น</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzNgdJEnRY6e48IHD62QXN0AamSHL_qrbI82aKTacrn14qfLaNhAK1QcdDcvyksIN4_/exec';
 const DEFAULT_CATEGORIES = ['อาหาร/ของสด','ของใช้ในบ้าน','เครื่องใช้ไฟฟ้า/สมาร์ทโฮม','อะไหล่รถยนต์','เครื่องมือช่าง/ประปา','อื่นๆ'];
+const DEFAULT_LOCATIONS = ['ตู้เย็นชั้น 2','ตู้เก็บของในครัว','โรงรถ','ห้องเก็บของ','ลิ้นชักทีวี'];
 
 let items = [];
 let categories = [];
+let locations = [];
 let editingId = null;
 let activeCategory = 'all';
 let searchTerm = '';
@@ -633,6 +653,22 @@ async function saveCategories(){
   }
 }
 
+async function saveLocations(){
+  try{
+    await postToSheet('locations', locations);
+    hideStatusError();
+  }catch(e){
+    showToast('บันทึกสถานที่เก็บไม่สำเร็จ');
+    showStatusError('บันทึกสถานที่เก็บไปที่ Google Sheet ไม่สำเร็จ', e && e.message ? e.message : String(e));
+  }
+}
+
+function getDynamicLocations(){
+  const set = new Set([...DEFAULT_LOCATIONS, ...locations]);
+  items.forEach(i => { if(i.location) set.add(i.location); });
+  return Array.from(set);
+}
+
 function populateCategorySelect(selected){
   const sel = $('f-category');
   let html = '';
@@ -644,6 +680,20 @@ function populateCategorySelect(selected){
   sel.value = categories.includes(selected) ? selected : categories[0];
   $('f-category-new').style.display = 'none';
   $('f-category-new').value = '';
+}
+
+function populateLocationSelect(selected){
+  const sel = $('f-location');
+  const allLocs = getDynamicLocations();
+  let html = '';
+  allLocs.forEach(l => {
+    html += `<option value="${escapeAttr(l)}">${escapeHtml(l)}</option>`;
+  });
+  html += `<option value="__new__">+ เพิ่มสถานที่เก็บใหม่...</option>`;
+  sel.innerHTML = html;
+  sel.value = allLocs.includes(selected) ? selected : allLocs[0];
+  $('f-location-new').style.display = 'none';
+  $('f-location-new').value = '';
 }
 
 function renderCategoryManageList(){
@@ -708,6 +758,66 @@ function renderCategoryManageList(){
   });
 }
 
+function renderLocationManageList(){
+  const wrap = $('locList');
+  const allLocs = getDynamicLocations();
+  if(allLocs.length === 0){
+    wrap.innerHTML = `<p style="font-size:13px;color:var(--ink-soft);">ยังไม่มีสถานที่เก็บ</p>`;
+    return;
+  }
+  let html = '';
+  allLocs.forEach((l) => {
+    const usedCount = items.filter(i => i.location === l).length;
+    html += `<div class="cat-row">
+      <input type="text" value="${escapeAttr(l)}" data-orig="${escapeAttr(l)}">
+      <button type="button" class="cat-del" data-loc="${escapeAttr(l)}" title="${usedCount} รายการใช้อยู่">ลบ</button>
+    </div>`;
+  });
+  wrap.innerHTML = html;
+
+  wrap.querySelectorAll('.cat-row input').forEach(input => {
+    input.addEventListener('change', async () => {
+      const oldName = input.dataset.orig;
+      const newName = input.value.trim();
+      if(!newName){ input.value = oldName; return; }
+      if(newName === oldName) return;
+      const all = getDynamicLocations();
+      if(all.includes(newName)){
+        showToast('มีสถานที่เก็บนี้อยู่แล้ว');
+        input.value = oldName;
+        return;
+      }
+      if(!locations.includes(oldName)) locations.push(oldName);
+      const idx = locations.indexOf(oldName);
+      if(idx > -1) locations[idx] = newName;
+      items.forEach(i => { if(i.location === oldName) i.location = newName; });
+      await saveLocations();
+      await saveItems();
+      input.dataset.orig = newName;
+      render();
+      renderLocationManageList();
+      showToast('แก้ไขสถานที่เก็บแล้ว');
+    });
+  });
+
+  wrap.querySelectorAll('.cat-del').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const loc = btn.dataset.loc;
+      const usedCount = items.filter(i => i.location === loc).length;
+      if(usedCount > 0){
+        if(!confirm(`มี ${usedCount} รายการอยู่ที่ "${loc}" คุณต้องการลบสถานที่นี้และรายการทั้งหมดในนี้ใช่ไหม?`)) return;
+        items = items.filter(i => i.location !== loc);
+        await saveItems();
+      }
+      locations = locations.filter(l => l !== loc);
+      await saveLocations();
+      render();
+      renderLocationManageList();
+      showToast('ลบสถานที่เก็บแล้ว');
+    });
+  });
+}
+
 function openCatManage(){
   renderCategoryManageList();
   $('catOverlay').classList.add('show');
@@ -715,6 +825,16 @@ function openCatManage(){
 function closeCatManage(){
   $('catOverlay').classList.remove('show');
   populateCategorySelect($('f-category').value);
+  render();
+}
+
+function openLocManage(){
+  renderLocationManageList();
+  $('locOverlay').classList.add('show');
+}
+function closeLocManage(){
+  $('locOverlay').classList.remove('show');
+  populateLocationSelect($('f-location').value);
   render();
 }
 
@@ -761,13 +881,16 @@ async function loadItems(){
       const data = await fetchAllFromSheet();
       items = Array.isArray(data.items) ? data.items : [];
       categories = Array.isArray(data.categories) && data.categories.length ? data.categories : [...DEFAULT_CATEGORIES];
+      locations = Array.isArray(data.locations) ? data.locations : [];
     }catch(e){
       items = [];
       categories = [...DEFAULT_CATEGORIES];
+      locations = [];
     }
   }else{
     items = [];
     categories = [...DEFAULT_CATEGORIES];
+    locations = [];
   }
   if(!categories.includes('อื่นๆ')) categories.push('อื่นๆ');
   render();
@@ -988,8 +1111,8 @@ function openAddSheet(){
   $('sheetTitle').textContent = 'เพิ่มของใหม่';
   $('f-name').value = '';
   populateCategorySelect(categories[0]);
+  populateLocationSelect(getDynamicLocations()[0]);
   $('f-qty').value = 1;
-  $('f-location').value = '';
   $('f-store').value = '';
   $('f-price').value = '';
   $('f-purchase').value = new Date().toISOString().slice(0,10);
@@ -1006,8 +1129,8 @@ function openEditSheet(id){
   $('sheetTitle').textContent = 'แก้ไขรายการ';
   $('f-name').value = item.name;
   populateCategorySelect(item.category);
+  populateLocationSelect(item.location);
   $('f-qty').value = item.quantity;
-  $('f-location').value = item.location;
   $('f-store').value = item.store || '';
   $('f-price').value = item.price || '';
   $('f-purchase').value = item.purchaseDate || '';
@@ -1022,11 +1145,9 @@ function closeSheet(){
 
 async function handleSave(){
   const name = $('f-name').value.trim();
-  const location = $('f-location').value.trim();
   const qty = parseInt($('f-qty').value, 10);
 
   if(!name){ showToast('กรุณาใส่ชื่อของ'); $('f-name').focus(); return; }
-  if(!location){ showToast('กรุณาระบุที่เก็บ'); $('f-location').focus(); return; }
   if(isNaN(qty) || qty < 0){ showToast('จำนวนไม่ถูกต้อง'); $('f-qty').focus(); return; }
 
   let category = $('f-category').value;
@@ -1039,6 +1160,18 @@ async function handleSave(){
     }
     category = newCat;
   }
+
+  let location = $('f-location').value;
+  if(location === '__new__'){
+    const newLoc = $('f-location-new').value.trim();
+    if(!newLoc){ showToast('กรุณาพิมพ์ชื่อสถานที่เก็บใหม่'); $('f-location-new').focus(); return; }
+    if(!locations.includes(newLoc)){
+      locations.push(newLoc);
+      await saveLocations();
+    }
+    location = newLoc;
+  }
+  if(!location){ showToast('กรุณาระบุที่เก็บ'); $('f-location').focus(); return; }
 
   const data = {
     name,
@@ -1076,6 +1209,11 @@ $('f-category').addEventListener('change', (e) => {
   if(e.target.value === '__new__') $('f-category-new').focus();
 });
 
+$('f-location').addEventListener('change', (e) => {
+  $('f-location-new').style.display = e.target.value === '__new__' ? 'block' : 'none';
+  if(e.target.value === '__new__') $('f-location-new').focus();
+});
+
 $('manageCatBtn').addEventListener('click', openCatManage);
 $('catCloseBtn').addEventListener('click', closeCatManage);
 $('catOverlay').addEventListener('click', (e) => { if(e.target.id === 'catOverlay') closeCatManage(); });
@@ -1091,8 +1229,23 @@ $('catAddBtn').addEventListener('click', async () => {
   showToast('เพิ่มหมวดหมู่แล้ว');
 });
 
+$('manageLocBtn').addEventListener('click', openLocManage);
+$('locCloseBtn').addEventListener('click', closeLocManage);
+$('locOverlay').addEventListener('click', (e) => { if(e.target.id === 'locOverlay') closeLocManage(); });
+$('locAddBtn').addEventListener('click', async () => {
+  const input = $('locNewInput');
+  const name = input.value.trim();
+  if(!name){ showToast('พิมพ์ชื่อสถานที่ก่อน'); return; }
+  if(getDynamicLocations().includes(name)){ showToast('มีสถานที่นี้อยู่แล้ว'); return; }
+  locations.push(name);
+  await saveLocations();
+  input.value = '';
+  renderLocationManageList();
+  showToast('เพิ่มสถานที่เก็บแล้ว');
+});
+
 $('exportBtn').addEventListener('click', () => {
-  const backup = { exportedAt: new Date().toISOString(), items, categories };
+  const backup = { exportedAt: new Date().toISOString(), items, categories, locations };
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1117,8 +1270,10 @@ $('importFile').addEventListener('change', (e) => {
       if(!confirm(`ไฟล์นี้มี ${backup.items.length} รายการ จะแทนที่ข้อมูลปัจจุบันทั้งหมดใช่ไหม?`)) return;
       items = backup.items;
       categories = Array.isArray(backup.categories) && backup.categories.length ? backup.categories : [...DEFAULT_CATEGORIES];
+      locations = Array.isArray(backup.locations) ? backup.locations : [];
       await saveItems();
       await saveCategories();
+      await saveLocations();
       render();
       showToast('นำเข้าข้อมูลสำเร็จ');
     }catch(err){
