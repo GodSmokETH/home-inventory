@@ -918,7 +918,7 @@ function expiryStatus(dateStr){
   const days = daysUntil(dateStr);
   if(days === null) return null;
   if(days < 0) return 'expired';
-  if(days <= 30) return 'expiring';
+  if(days <= 7) return 'expiring';
   return 'ok';
 }
 
