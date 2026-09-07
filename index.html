@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คลังอะไหล่บ้าน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#E6E9E1;
+    --surface:#FFFFFF;
+    --ink:#1E2521;
+    --ink-soft:#5B655D;
+    --primary:#2B6E64;
+    --primary-dark:#1E4F48;
+    --warn:#C4501E;
+    --warn-bg:#FBEAE0;
+    --tag:#8E7A4B;
+    --tag-bg:#F1ECDC;
+    --line:#CBD0C4;
+    --danger:#B23A2E;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.headline{
+    font-family:'Archivo', sans-serif;
+    font-weight:800;
+    letter-spacing:-0.01em;
+    margin:0;
+  }
+  #app{
+    max-width:640px;
+    margin:0 auto;
+    min-height:100vh;
+    background:var(--bg);
+    padding-bottom:80px;
+  }
+  header{
+    padding:28px 20px 18px;
+    border-bottom:2px solid var(--ink);
+  }
+  header .top-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+  }
+  header h1{
+    font-size:26px;
+    line-height:1.1;
+  }
+  header p{
+    margin:6px 0 0;
+    color:var(--ink-soft);
+    font-size:14px;
+  }
+  .stat-pill{
+    background:var(--surface);
+    border:1.5px solid var(--ink);
+    border-radius:3px;
+    padding:8px 12px;
+    text-align:center;
+    min-width:64px;
+    flex-shrink:0;
+  }
+  .stat-pill .num{
+    font-family:'Archivo',sans-serif;
+    font-weight:800;
+    font-size:20px;
+    display:block;
+    line-height:1;
+  }
+  .stat-pill .lbl{
+    font-size:11px;
+    color:var(--ink-soft);
+  }
+  .banner{
+    margin:16px 20px 0;
+    background:var(--warn-bg);
+    border:1.5px solid var(--warn);
+    border-radius:3px;
+    padding:12px 14px;
+    font-size:14px;
+    color:var(--warn);
+    display:none;
+  }
+  .banner.show{display:block;}
+  .banner strong{display:block;font-family:'Archivo',sans-serif;font-size:14px;margin-bottom:2px;}
+  .controls{
+    padding:16px 20px 0;
+    display:flex;
+    gap:8px;
+  }
+  .search-box{
+    flex:1;
+    position:relative;
+  }
+  .search-box input{
+    width:100%;
+    padding:10px 12px;
+    border:1.5px solid var(--line);
+    border-radius:3px;
+    font-family:inherit;
+    font-size:14px;
+    background:var(--surface);
+    color:var(--ink);
+  }
+  .search-box input:focus{outline:2px solid var(--primary);outline-offset:1px;border-color:var(--primary);}
+  .add-btn{
+    background:var(--primary);
+    color:#fff;
+    border:none;
+    border-radius:3px;
+    padding:10px 16px;
+    font-family:'Archivo',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .add-btn:hover{background:var(--primary-dark);}
+  .add-btn:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{
+    outline:2px solid var(--primary);
+    outline-offset:2px;
+  }
+  .chips{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    padding:12px 20px 0;
+  }
+  .chip{
+    border:1.5px solid var(--line);
+    background:var(--surface);
+    color:var(--ink-soft);
+    border-radius:20px;
+    padding:5px 12px;
+    font-size:12.5px;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .chip.active{
+    background:var(--ink);
+    border-color:var(--ink);
+    color:#fff;
+  }
+  main{padding:18px 20px 0;}
+  .location-group{margin-bottom:20px;}
+  .location-header{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+    padding-bottom:6px;
+    border-bottom:1.5px solid var(--ink);
+    margin-bottom:10px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .location-header h2{
+    font-size:16px;
+    flex:1;
+  }
+  .location-header .count{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    font-family:'IBM Plex Sans',sans-serif;
+    font-weight:500;
+  }
+  .location-header .caret{
+    font-size:12px;
+    color:var(--ink-soft);
+    transition:transform 0.15s;
+  }
+  .location-group.collapsed .caret{transform:rotate(-90deg);}
+  .location-group.collapsed .items-list{display:none;}
+  .items-list{display:flex;flex-direction:column;gap:8px;}
+  .item-card{
+    background:var(--surface);
+    border:1.5px solid var(--line);
+    border-radius:3px;
+    padding:12px 14px;
+    cursor:pointer;
+    position:relative;
+  }
+  .item-card.expired{border-color:var(--danger);}
+  .item-card.expiring{border-color:var(--warn);}
+  .item-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .item-name{
+    font-family:'Archivo',sans-serif;
+    font-weight:700;
+    font-size:15px;
+  }
+  .item-meta{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-top:3px;
+  }
+  .item-qty{
+    font-family:'Archivo',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    color:var(--ink-soft);
+    flex-shrink:0;
+  }
+  .tag-row{
+    display:flex;
+    gap:6px;
+    margin-top:8px;
+    flex-wrap:wrap;
+  }
+  .tag{
+    background:var(--tag-bg);
+    color:var(--tag);
+    font-size:11.5px;
+    padding:3px 8px;
+    border-radius:3px;
+    font-weight:500;
+  }
+  .tag.expiry-warn{background:var(--warn-bg);color:var(--warn);}
+  .tag.expiry-danger{background:#F7E2DE;color:var(--danger);}
+  .detail-panel{
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px solid var(--line);
+    font-size:13px;
+    color:var(--ink-soft);
+    display:none;
+  }
+  .item-card.open .detail-panel{display:block;}
+  .detail-panel .drow{display:flex;justify-content:space-between;padding:3px 0;}
+  .detail-panel .notes{margin-top:6px;color:var(--ink);font-style:italic;}
+  .detail-actions{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+  }
+  .detail-actions button{
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    padding:6px 12px;
+    border-radius:3px;
+    cursor:pointer;
+    border:1.5px solid var(--line);
+    background:var(--surface);
+    color:var(--ink);
+  }
+  .detail-actions .del{border-color:var(--danger);color:var(--danger);}
+  .empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--ink-soft);
+  }
+  .empty-state h3{font-size:18px;margin-bottom:6px;color:var(--ink);}
+  .empty-state p{font-size:14px;margin:0 0 16px;}
+
+  .overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(30,37,33,0.4);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:50;
+  }
+  .overlay.show{display:flex;}
+  .sheet{
+    background:var(--bg);
+    width:100%;
+    max-width:640px;
+    max-height:88vh;
+    overflow-y:auto;
+    border-radius:12px 12px 0 0;
+    padding:20px;
+    border-top:2px solid var(--ink);
+  }
+  .sheet h2{font-size:19px;margin-bottom:16px;}
+  .field{margin-bottom:12px;}
+  .field label{
+    display:block;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--ink-soft);
+    margin-bottom:4px;
+  }
+  .field input, .field select, .field textarea{
+    width:100%;
+    padding:10px 11px;
+    border:1.5px solid var(--line);
+    border-radius:3px;
+    font-family:inherit;
+    font-size:14px;
+    background:var(--surface);
+    color:var(--ink);
+  }
+  .field textarea{resize:vertical;min-height:50px;}
+  .field-row{display:flex;gap:10px;}
+  .field-row .field{flex:1;}
+  .form-actions{
+    display:flex;
+    gap:10px;
+    margin-top:18px;
+  }
+  .form-actions button{
+    flex:1;
+    padding:12px;
+    border-radius:3px;
+    font-family:'Archivo',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    border:1.5px solid var(--ink);
+  }
+  .btn-save{background:var(--primary);border-color:var(--primary);color:#fff;}
+  .btn-cancel{background:transparent;color:var(--ink);}
+  .toast{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--ink);
+    color:#fff;
+    padding:10px 18px;
+    border-radius:20px;
+    font-size:13px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.2s;
+    z-index:60;
+  }
+  .toast.show{opacity:1;}
+  .loading{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--ink-soft);
+    font-size:14px;
+  }
+  .share-note{
+    margin:16px 20px 0;
+    font-size:12px;
+    color:var(--ink-soft);
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:9px 12px;
+  }
+  .backup-row{
+    display:flex;
+    gap:14px;
+    margin-top:8px;
+  }
+  .backup-row button, .backup-row label{
+    background:none;
+    border:none;
+    color:var(--primary);
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+    padding:0;
+    font-family:inherit;
+  }
+  .backup-row button:hover, .backup-row label:hover{text-decoration:underline;}
+  .status-banner{
+    margin:12px 20px 0;
+    border-radius:3px;
+    padding:10px 14px;
+    font-size:12.5px;
+    display:none;
+  }
+  .status-banner.error{
+    display:block;
+    background:#F7E2DE;
+    border:1.5px solid var(--danger);
+    color:var(--danger);
+  }
+  .status-banner.error strong{display:block;font-family:'Archivo',sans-serif;font-size:13px;margin-bottom:2px;}
+  .status-banner .err-detail{
+    display:block;
+    margin-top:4px;
+    font-family:monospace;
+    font-size:11px;
+    word-break:break-all;
+    opacity:0.85;
+  }
+  .field-label-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:4px;
+  }
+  .field-label-row label{margin-bottom:0;}
+  .manage-link{
+    background:none;
+    border:none;
+    color:var(--primary);
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+    padding:0;
+    font-family:inherit;
+  }
+  .manage-link:hover{text-decoration:underline;}
+  .cat-row{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    margin-bottom:8px;
+  }
+  .cat-row input{
+    flex:1;
+    padding:9px 10px;
+    border:1.5px solid var(--line);
+    border-radius:3px;
+    font-family:inherit;
+    font-size:13.5px;
+    background:var(--surface);
+    color:var(--ink);
+  }
+  .cat-row .cat-del{
+    background:none;
+    border:1.5px solid var(--line);
+    color:var(--danger);
+    border-radius:3px;
+    padding:8px 10px;
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .cat-row .cat-del:hover{background:#F7E2DE;}
+  .cat-add-row{
+    display:flex;
+    gap:8px;
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1px solid var(--line);
+  }
+  .cat-add-row input{
+    flex:1;
+    padding:9px 10px;
+    border:1.5px solid var(--line);
+    border-radius:3px;
+    font-family:inherit;
+    font-size:13.5px;
+    background:var(--surface);
+    color:var(--ink);
+  }
+  .cat-add-row button{
+    background:var(--primary);
+    color:#fff;
+    border:none;
+    border-radius:3px;
+    padding:9px 14px;
+    font-family:'Archivo',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="top-row">
+      <div>
+        <h1>คลังอะไหล่บ้าน</h1>
+        <p>เช็คของที่มีอยู่ ก่อนจะซื้อซ้ำ</p>
+      </div>
+      <div class="stat-pill">
+        <span class="num" id="statCount">0</span>
+        <span class="lbl">รายการ</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="banner" id="expiryBanner">
+    <strong id="bannerTitle"></strong>
+    <span id="bannerBody"></span>
+  </div>
+
+  <div class="status-banner" id="statusBanner">
+    <strong>ระบบจัดเก็บข้อมูลมีปัญหา</strong>
+    <span id="statusDetail"></span>
+    <span class="err-detail" id="statusErrRaw"></span>
+  </div>
+
+  <div class="share-note">
+    ข้อมูลทั้งหมดเก็บอยู่ใน Google Sheet ของคุณเอง ทุกคนที่เปิดไฟล์นี้ (จากลิงก์เดียวกัน หรือไฟล์เดียวกัน) จะเห็นและแก้ไขข้อมูลชุดเดียวกัน
+    <div class="backup-row">
+      <button type="button" id="exportBtn">ดาวน์โหลดสำรองข้อมูล</button>
+      <label for="importFile">นำเข้าไฟล์สำรอง</label>
+      <input type="file" id="importFile" accept="application/json" style="display:none;">
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="ค้นหาชื่อของ / ที่เก็บ / ร้าน...">
+    </div>
+    <button class="add-btn" id="openAddBtn">+ เพิ่มของ</button>
+  </div>
+
+  <div class="chips" id="categoryChips"></div>
+
+  <main id="mainContent">
+    <div class="loading">กำลังโหลดข้อมูล...</div>
+  </main>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <h2 id="sheetTitle">เพิ่มของใหม่</h2>
+    <div class="field">
+      <label for="f-name">ชื่อของ *</label>
+      <input type="text" id="f-name" placeholder="เช่น หลอด LED 9W">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <div class="field-label-row">
+          <label for="f-category">หมวดหมู่ *</label>
+          <button type="button" class="manage-link" id="manageCatBtn">จัดการหมวดหมู่</button>
+        </div>
+        <select id="f-category"></select>
+        <input type="text" id="f-category-new" placeholder="พิมพ์ชื่อหมวดหมู่ใหม่" style="display:none;margin-top:6px;">
+      </div>
+      <div class="field">
+        <label for="f-qty">จำนวน *</label>
+        <input type="number" id="f-qty" min="0" value="1">
+      </div>
+    </div>
+    <div class="field">
+      <label for="f-location">เก็บไว้ที่ไหน *</label>
+      <input type="text" id="f-location" placeholder="เช่น ชั้นวางของโรงรถ ช่องที่ 2">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="f-store">ซื้อจากร้าน</label>
+        <input type="text" id="f-store" placeholder="เช่น โฮมโปร">
+      </div>
+      <div class="field">
+        <label for="f-price">ราคา (บาท)</label>
+        <input type="number" id="f-price" min="0" step="0.01">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="f-purchase">วันที่ซื้อ</label>
+        <input type="date" id="f-purchase">
+      </div>
+      <div class="field">
+        <label for="f-expiry">วันหมดอายุ (ถ้ามี)</label>
+        <input type="date" id="f-expiry">
+      </div>
+    </div>
+    <div class="field">
+      <label for="f-notes">หมายเหตุ</label>
+      <textarea id="f-notes" placeholder="รายละเอียดเพิ่มเติม เช่น ขนาด รุ่น"></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn-cancel" id="cancelBtn" type="button">ยกเลิก</button>
+      <button class="btn-save" id="saveBtn" type="button">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="catOverlay">
+  <div class="sheet">
+    <h2>จัดการหมวดหมู่</h2>
+    <div id="catList"></div>
+    <div class="cat-add-row">
+      <input type="text" id="catNewInput" placeholder="เพิ่มหมวดหมู่ใหม่">
+      <button type="button" id="catAddBtn">เพิ่ม</button>
+    </div>
+    <div class="form-actions">
+      <button class="btn-cancel" id="catCloseBtn" type="button">เสร็จสิ้น</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzNgdJEnRY6e48IHD62QXN0AamSHL_qrbI82aKTacrn14qfLaNhAK1QcdDcvyksIN4_/exec';
+const DEFAULT_CATEGORIES = ['หลอดไฟ','สวิตซ์ไฟ','ท่อน้ำ','ก๊อกน้ำ','ปลั๊ก/สายไฟ','กุญแจ/บานพับ','อื่นๆ'];
+
+let items = [];
+let categories = [];
+let editingId = null;
+let activeCategory = 'all';
+let searchTerm = '';
+let collapsedGroups = new Set();
+
+const $ = (id) => document.getElementById(id);
+
+// --- Google Sheet backend (via Apps Script Web App) ---
+async function fetchAllFromSheet(){
+  const res = await fetch(APPS_SCRIPT_URL, { method: 'GET' });
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  return await res.json();
+}
+
+async function postToSheet(key, value){
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ key, value })
+  });
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  const json = await res.json();
+  if(!json || !json.ok) throw new Error('server did not confirm save');
+  return json;
+}
+
+async function saveCategories(){
+  try{
+    await postToSheet('categories', categories);
+    hideStatusError();
+  }catch(e){
+    showToast('บันทึกหมวดหมู่ไม่สำเร็จ');
+    showStatusError('บันทึกหมวดหมู่ไปที่ Google Sheet ไม่สำเร็จ', e && e.message ? e.message : String(e));
+  }
+}
+
+function populateCategorySelect(selected){
+  const sel = $('f-category');
+  let html = '';
+  categories.forEach(c => {
+    html += `<option value="${escapeAttr(c)}">${escapeHtml(c)}</option>`;
+  });
+  html += `<option value="__new__">+ เพิ่มหมวดหมู่ใหม่...</option>`;
+  sel.innerHTML = html;
+  sel.value = categories.includes(selected) ? selected : categories[0];
+  $('f-category-new').style.display = 'none';
+  $('f-category-new').value = '';
+}
+
+function renderCategoryManageList(){
+  const wrap = $('catList');
+  if(categories.length === 0){
+    wrap.innerHTML = `<p style="font-size:13px;color:var(--ink-soft);">ยังไม่มีหมวดหมู่</p>`;
+    return;
+  }
+  let html = '';
+  categories.forEach((c, idx) => {
+    const usedCount = items.filter(i => i.category === c).length;
+    html += `<div class="cat-row" data-idx="${idx}">
+      <input type="text" value="${escapeAttr(c)}" data-orig="${escapeAttr(c)}">
+      <button type="button" class="cat-del" data-cat="${escapeAttr(c)}" title="${usedCount} รายการใช้อยู่">ลบ</button>
+    </div>`;
+  });
+  wrap.innerHTML = html;
+
+  wrap.querySelectorAll('.cat-row input').forEach(input => {
+    input.addEventListener('change', async () => {
+      const oldName = input.dataset.orig;
+      const newName = input.value.trim();
+      if(!newName){ input.value = oldName; return; }
+      if(newName === oldName) return;
+      if(categories.includes(newName)){
+        showToast('มีหมวดหมู่นี้อยู่แล้ว');
+        input.value = oldName;
+        return;
+      }
+      const idx = categories.indexOf(oldName);
+      categories[idx] = newName;
+      items.forEach(i => { if(i.category === oldName) i.category = newName; });
+      await saveCategories();
+      await saveItems();
+      input.dataset.orig = newName;
+      render();
+      renderCategoryManageList();
+      showToast('แก้ไขหมวดหมู่แล้ว');
+    });
+  });
+
+  wrap.querySelectorAll('.cat-del').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const cat = btn.dataset.cat;
+      const usedCount = items.filter(i => i.category === cat).length;
+      if(categories.length <= 1){
+        showToast('ต้องมีอย่างน้อย 1 หมวดหมู่');
+        return;
+      }
+      if(usedCount > 0){
+        const fallback = categories.find(c => c !== cat) || 'อื่นๆ';
+        if(!confirm(`มี ${usedCount} รายการใช้หมวดหมู่นี้อยู่ จะย้ายไปเป็น "${fallback}" และลบหมวดหมู่นี้ใช่ไหม?`)) return;
+        items.forEach(i => { if(i.category === cat) i.category = fallback; });
+        await saveItems();
+      }
+      categories = categories.filter(c => c !== cat);
+      await saveCategories();
+      render();
+      renderCategoryManageList();
+      showToast('ลบหมวดหมู่แล้ว');
+    });
+  });
+}
+
+function openCatManage(){
+  renderCategoryManageList();
+  $('catOverlay').classList.add('show');
+}
+function closeCatManage(){
+  $('catOverlay').classList.remove('show');
+  populateCategorySelect($('f-category').value);
+  render();
+}
+
+function uid(){
+  return 'it_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
+}
+
+function showToast(msg){
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), 1800);
+}
+
+function showStatusError(detail, rawErr){
+  const banner = $('statusBanner');
+  banner.classList.add('error');
+  $('statusDetail').textContent = detail;
+  $('statusErrRaw').textContent = rawErr ? String(rawErr) : '';
+}
+function hideStatusError(){
+  $('statusBanner').classList.remove('error');
+}
+
+async function testStorageConnection(){
+  if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf('script.google.com') === -1){
+    showStatusError('ยังไม่ได้ตั้งค่าลิงก์ Google Apps Script — กรุณาใส่ APPS_SCRIPT_URL ในโค้ด', 'APPS_SCRIPT_URL not configured');
+    return false;
+  }
+  try{
+    await fetchAllFromSheet();
+    hideStatusError();
+    return true;
+  }catch(err){
+    showStatusError('เชื่อมต่อ Google Sheet ไม่ได้ ข้อมูลจะไม่ถูกบันทึกถาวร — ตรวจสอบว่า deploy เป็น Web App แบบ "Anyone" แล้ว และลิงก์ถูกต้อง', err && err.message ? err.message : String(err));
+    return false;
+  }
+}
+
+async function loadItems(){
+  const ok = await testStorageConnection();
+  if(ok){
+    try{
+      const data = await fetchAllFromSheet();
+      items = Array.isArray(data.items) ? data.items : [];
+      categories = Array.isArray(data.categories) && data.categories.length ? data.categories : [...DEFAULT_CATEGORIES];
+    }catch(e){
+      items = [];
+      categories = [...DEFAULT_CATEGORIES];
+    }
+  }else{
+    items = [];
+    categories = [...DEFAULT_CATEGORIES];
+  }
+  if(!categories.includes('อื่นๆ')) categories.push('อื่นๆ');
+  render();
+}
+
+async function saveItems(){
+  try{
+    await postToSheet('items', items);
+    hideStatusError();
+  }catch(e){
+    showToast('เกิดข้อผิดพลาดในการบันทึก');
+    showStatusError('บันทึกรายการล่าสุดไปที่ Google Sheet ไม่สำเร็จ', e && e.message ? e.message : String(e));
+  }
+}
+
+function daysUntil(dateStr){
+  if(!dateStr) return null;
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const d = new Date(dateStr);
+  return Math.round((d - today) / 86400000);
+}
+
+function expiryStatus(dateStr){
+  const days = daysUntil(dateStr);
+  if(days === null) return null;
+  if(days < 0) return 'expired';
+  if(days <= 30) return 'expiring';
+  return 'ok';
+}
+
+function formatDate(dateStr){
+  if(!dateStr) return '-';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'numeric'});
+}
+
+function renderChips(){
+  const wrap = $('categoryChips');
+  const present = categories.filter(c => items.some(i => i.category === c));
+  let html = `<button class="chip ${activeCategory==='all'?'active':''}" data-cat="all">ทั้งหมด</button>`;
+  present.forEach(c => {
+    html += `<button class="chip ${activeCategory===c?'active':''}" data-cat="${c}">${c}</button>`;
+  });
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('.chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeCategory = btn.dataset.cat;
+      render();
+    });
+  });
+}
+
+function renderBanner(){
+  const banner = $('expiryBanner');
+  const expired = items.filter(i => expiryStatus(i.expiryDate) === 'expired');
+  const expiring = items.filter(i => expiryStatus(i.expiryDate) === 'expiring');
+  if(expired.length === 0 && expiring.length === 0){
+    banner.classList.remove('show');
+    return;
+  }
+  banner.classList.add('show');
+  const parts = [];
+  if(expired.length) parts.push(`หมดอายุแล้ว ${expired.length} รายการ`);
+  if(expiring.length) parts.push(`ใกล้หมดอายุ ${expiring.length} รายการ`);
+  $('bannerTitle').textContent = 'ควรตรวจสอบของในสต๊อก';
+  $('bannerBody').textContent = parts.join(' · ') + ' — แตะรายการเพื่อดูรายละเอียด';
+}
+
+function itemMatchesFilters(item){
+  if(activeCategory !== 'all' && item.category !== activeCategory) return false;
+  if(searchTerm){
+    const hay = (item.name + ' ' + item.location + ' ' + item.store + ' ' + item.category).toLowerCase();
+    if(!hay.includes(searchTerm.toLowerCase())) return false;
+  }
+  return true;
+}
+
+function render(){
+  $('statCount').textContent = items.length;
+  renderChips();
+  renderBanner();
+
+  const filtered = items.filter(itemMatchesFilters);
+  const main = $('mainContent');
+
+  if(items.length === 0){
+    main.innerHTML = `<div class="empty-state">
+      <h3>ยังไม่มีของในสต๊อก</h3>
+      <p>เริ่มเพิ่มอะไหล่ชิ้นแรกที่คุณสำรองไว้ที่บ้าน</p>
+    </div>`;
+    return;
+  }
+
+  if(filtered.length === 0){
+    main.innerHTML = `<div class="empty-state">
+      <h3>ไม่พบรายการที่ค้นหา</h3>
+      <p>ลองเปลี่ยนคำค้นหาหรือหมวดหมู่</p>
+    </div>`;
+    return;
+  }
+
+  const groups = {};
+  filtered.forEach(item => {
+    const loc = item.location || 'ไม่ระบุที่เก็บ';
+    if(!groups[loc]) groups[loc] = [];
+    groups[loc].push(item);
+  });
+
+  const locNames = Object.keys(groups).sort((a,b)=> a.localeCompare(b,'th'));
+
+  let html = '';
+  locNames.forEach(loc => {
+    const groupItems = groups[loc].sort((a,b)=> a.name.localeCompare(b.name,'th'));
+    const isCollapsed = collapsedGroups.has(loc);
+    html += `<div class="location-group ${isCollapsed?'collapsed':''}" data-loc="${escapeAttr(loc)}">
+      <div class="location-header" data-toggle="${escapeAttr(loc)}">
+        <span class="caret">▾</span>
+        <h2>${escapeHtml(loc)}</h2>
+        <span class="count">${groupItems.length} รายการ</span>
+      </div>
+      <div class="items-list">`;
+    groupItems.forEach(item => {
+      const status = expiryStatus(item.expiryDate);
+      const cardClass = status === 'expired' ? 'expired' : (status === 'expiring' ? 'expiring' : '');
+      html += renderItemCard(item, cardClass, status);
+    });
+    html += `</div></div>`;
+  });
+
+  main.innerHTML = html;
+  attachListEvents();
+}
+
+function renderItemCard(item, cardClass, status){
+  let expiryTag = '';
+  if(item.expiryDate){
+    const days = daysUntil(item.expiryDate);
+    let cls = 'tag';
+    let label = `หมดอายุ ${formatDate(item.expiryDate)}`;
+    if(status === 'expired'){ cls += ' expiry-danger'; label = `หมดอายุแล้ว (${formatDate(item.expiryDate)})`; }
+    else if(status === 'expiring'){ cls += ' expiry-warn'; label = `ใกล้หมดอายุ · เหลือ ${days} วัน`; }
+    expiryTag = `<span class="${cls}">${label}</span>`;
+  }
+  const priceText = item.price ? `฿${Number(item.price).toLocaleString('th-TH')}` : null;
+
+  return `<div class="item-card ${cardClass}" data-id="${item.id}">
+    <div class="item-row">
+      <div>
+        <div class="item-name">${escapeHtml(item.name)}</div>
+        <div class="item-meta">${escapeHtml(item.store || 'ไม่ระบุร้าน')}${priceText ? ' · ' + priceText : ''}</div>
+      </div>
+      <div class="item-qty">×${item.quantity}</div>
+    </div>
+    <div class="tag-row">
+      <span class="tag">${escapeHtml(item.category)}</span>
+      ${expiryTag}
+    </div>
+    <div class="detail-panel">
+      <div class="drow"><span>ซื้อเมื่อ</span><span>${formatDate(item.purchaseDate)}</span></div>
+      <div class="drow"><span>ราคา</span><span>${priceText || '-'}</span></div>
+      <div class="drow"><span>ที่เก็บ</span><span>${escapeHtml(item.location)}</span></div>
+      ${item.notes ? `<div class="notes">${escapeHtml(item.notes)}</div>` : ''}
+      <div class="detail-actions">
+        <button class="edit-btn" data-id="${item.id}" type="button">แก้ไข</button>
+        <button class="del" data-id="${item.id}" type="button">ลบ</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function escapeHtml(str){
+  if(str === undefined || str === null) return '';
+  const div = document.createElement('div');
+  div.textContent = String(str);
+  return div.innerHTML;
+}
+function escapeAttr(str){
+  return escapeHtml(str).replace(/"/g,'&quot;');
+}
+
+function attachListEvents(){
+  document.querySelectorAll('.location-header').forEach(h => {
+    h.addEventListener('click', () => {
+      const loc = h.dataset.toggle;
+      if(collapsedGroups.has(loc)) collapsedGroups.delete(loc);
+      else collapsedGroups.add(loc);
+      render();
+    });
+  });
+  document.querySelectorAll('.item-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if(e.target.closest('.detail-actions')) return;
+      card.classList.toggle('open');
+    });
+  });
+  document.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openEditSheet(btn.dataset.id);
+    });
+  });
+  document.querySelectorAll('.del').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if(confirm('ลบรายการนี้ใช่ไหม?')){
+        items = items.filter(i => i.id !== btn.dataset.id);
+        await saveItems();
+        render();
+        showToast('ลบรายการแล้ว');
+      }
+    });
+  });
+}
+
+function openAddSheet(){
+  editingId = null;
+  $('sheetTitle').textContent = 'เพิ่มของใหม่';
+  $('f-name').value = '';
+  populateCategorySelect(categories[0]);
+  $('f-qty').value = 1;
+  $('f-location').value = '';
+  $('f-store').value = '';
+  $('f-price').value = '';
+  $('f-purchase').value = new Date().toISOString().slice(0,10);
+  $('f-expiry').value = '';
+  $('f-notes').value = '';
+  $('overlay').classList.add('show');
+  $('f-name').focus();
+}
+
+function openEditSheet(id){
+  const item = items.find(i => i.id === id);
+  if(!item) return;
+  editingId = id;
+  $('sheetTitle').textContent = 'แก้ไขรายการ';
+  $('f-name').value = item.name;
+  populateCategorySelect(item.category);
+  $('f-qty').value = item.quantity;
+  $('f-location').value = item.location;
+  $('f-store').value = item.store || '';
+  $('f-price').value = item.price || '';
+  $('f-purchase').value = item.purchaseDate || '';
+  $('f-expiry').value = item.expiryDate || '';
+  $('f-notes').value = item.notes || '';
+  $('overlay').classList.add('show');
+}
+
+function closeSheet(){
+  $('overlay').classList.remove('show');
+}
+
+async function handleSave(){
+  const name = $('f-name').value.trim();
+  const location = $('f-location').value.trim();
+  const qty = parseInt($('f-qty').value, 10);
+
+  if(!name){ showToast('กรุณาใส่ชื่อของ'); $('f-name').focus(); return; }
+  if(!location){ showToast('กรุณาระบุที่เก็บ'); $('f-location').focus(); return; }
+  if(isNaN(qty) || qty < 0){ showToast('จำนวนไม่ถูกต้อง'); $('f-qty').focus(); return; }
+
+  let category = $('f-category').value;
+  if(category === '__new__'){
+    const newCat = $('f-category-new').value.trim();
+    if(!newCat){ showToast('กรุณาพิมพ์ชื่อหมวดหมู่ใหม่'); $('f-category-new').focus(); return; }
+    if(!categories.includes(newCat)){
+      categories.push(newCat);
+      await saveCategories();
+    }
+    category = newCat;
+  }
+
+  const data = {
+    name,
+    category,
+    quantity: qty,
+    location,
+    store: $('f-store').value.trim(),
+    price: $('f-price').value ? parseFloat($('f-price').value) : null,
+    purchaseDate: $('f-purchase').value || null,
+    expiryDate: $('f-expiry').value || null,
+    notes: $('f-notes').value.trim(),
+  };
+
+  if(editingId){
+    const idx = items.findIndex(i => i.id === editingId);
+    if(idx > -1) items[idx] = { ...items[idx], ...data };
+  }else{
+    items.push({ id: uid(), ...data, createdAt: Date.now() });
+  }
+
+  await saveItems();
+  closeSheet();
+  render();
+  showToast(editingId ? 'แก้ไขรายการแล้ว' : 'เพิ่มรายการแล้ว');
+}
+
+$('openAddBtn').addEventListener('click', openAddSheet);
+$('cancelBtn').addEventListener('click', closeSheet);
+$('saveBtn').addEventListener('click', handleSave);
+$('overlay').addEventListener('click', (e) => { if(e.target.id === 'overlay') closeSheet(); });
+$('searchInput').addEventListener('input', (e) => { searchTerm = e.target.value; render(); });
+
+$('f-category').addEventListener('change', (e) => {
+  $('f-category-new').style.display = e.target.value === '__new__' ? 'block' : 'none';
+  if(e.target.value === '__new__') $('f-category-new').focus();
+});
+
+$('manageCatBtn').addEventListener('click', openCatManage);
+$('catCloseBtn').addEventListener('click', closeCatManage);
+$('catOverlay').addEventListener('click', (e) => { if(e.target.id === 'catOverlay') closeCatManage(); });
+$('catAddBtn').addEventListener('click', async () => {
+  const input = $('catNewInput');
+  const name = input.value.trim();
+  if(!name){ showToast('พิมพ์ชื่อหมวดหมู่ก่อน'); return; }
+  if(categories.includes(name)){ showToast('มีหมวดหมู่นี้อยู่แล้ว'); return; }
+  categories.push(name);
+  await saveCategories();
+  input.value = '';
+  renderCategoryManageList();
+  showToast('เพิ่มหมวดหมู่แล้ว');
+});
+
+$('exportBtn').addEventListener('click', () => {
+  const backup = { exportedAt: new Date().toISOString(), items, categories };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `คลังอะไหล่บ้าน-สำรอง-${dateStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('ดาวน์โหลดไฟล์สำรองแล้ว');
+});
+
+$('importFile').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    try{
+      const backup = JSON.parse(ev.target.result);
+      if(!Array.isArray(backup.items)) throw new Error('invalid');
+      if(!confirm(`ไฟล์นี้มี ${backup.items.length} รายการ จะแทนที่ข้อมูลปัจจุบันทั้งหมดใช่ไหม?`)) return;
+      items = backup.items;
+      categories = Array.isArray(backup.categories) && backup.categories.length ? backup.categories : [...DEFAULT_CATEGORIES];
+      await saveItems();
+      await saveCategories();
+      render();
+      showToast('นำเข้าข้อมูลสำเร็จ');
+    }catch(err){
+      showToast('ไฟล์สำรองไม่ถูกต้อง ลองไฟล์อื่น');
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+});
+
+loadItems();
+</script>
+</body>
+</html>
