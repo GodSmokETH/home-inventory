@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>คลังอะไหล่บ้าน</title>
+<title>คลังของใช้ในบ้าน</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -265,7 +265,6 @@
   }
   .empty-state h3{font-size:18px;margin-bottom:6px;color:var(--ink);}
   .empty-state p{font-size:14px;margin:0 0 16px;}
-
   .overlay{
     position:fixed;
     inset:0;
@@ -476,8 +475,8 @@
   <header>
     <div class="top-row">
       <div>
-        <h1>คลังอะไหล่บ้าน</h1>
-        <p>เช็คของที่มีอยู่ ก่อนจะซื้อซ้ำ</p>
+        <h1>คลังของใช้ในบ้าน</h1>
+        <p>จัดการของใช้ อาหาร อะไหล่ และวันหมดประกัน</p>
       </div>
       <div class="stat-pill">
         <span class="num" id="statCount">0</span>
@@ -498,7 +497,7 @@
   </div>
 
   <div class="share-note">
-    ข้อมูลทั้งหมดเก็บอยู่ใน Google Sheet ของคุณเอง ทุกคนที่เปิดไฟล์นี้ (จากลิงก์เดียวกัน หรือไฟล์เดียวกัน) จะเห็นและแก้ไขข้อมูลชุดเดียวกัน
+    ข้อมูลทั้งหมดเก็บอยู่ใน Google Sheet ทุกคนที่เปิดไฟล์นี้ (จากลิงก์เดียวกัน) จะเห็นและอัปเดตข้อมูลชุดเดียวกันได้เลย
     <div class="backup-row">
       <button type="button" id="exportBtn">ดาวน์โหลดสำรองข้อมูล</button>
       <label for="importFile">นำเข้าไฟล์สำรอง</label>
@@ -525,13 +524,13 @@
     <h2 id="sheetTitle">เพิ่มของใหม่</h2>
     <div class="field">
       <label for="f-name">ชื่อของ *</label>
-      <input type="text" id="f-name" placeholder="เช่น หลอด LED 9W">
+      <input type="text" id="f-name" placeholder="เช่น นมสด, กรองแอร์ City Hatchback, สวิตช์ Tuya">
     </div>
     <div class="field-row">
       <div class="field">
         <div class="field-label-row">
           <label for="f-category">หมวดหมู่ *</label>
-          <button type="button" class="manage-link" id="manageCatBtn">จัดการหมวดหมู่</button>
+          <button type="button" class="manage-link" id="manageCatBtn">จัดการ</button>
         </div>
         <select id="f-category"></select>
         <input type="text" id="f-category-new" placeholder="พิมพ์ชื่อหมวดหมู่ใหม่" style="display:none;margin-top:6px;">
@@ -543,12 +542,12 @@
     </div>
     <div class="field">
       <label for="f-location">เก็บไว้ที่ไหน *</label>
-      <input type="text" id="f-location" placeholder="เช่น ชั้นวางของโรงรถ ช่องที่ 2">
+      <input type="text" id="f-location" placeholder="เช่น ตู้เย็นชั้น 2, ลิ้นชักทีวี, โรงรถ">
     </div>
     <div class="field-row">
       <div class="field">
         <label for="f-store">ซื้อจากร้าน</label>
-        <input type="text" id="f-store" placeholder="เช่น โฮมโปร">
+        <input type="text" id="f-store" placeholder="เช่น โฮมโปร, ตลาด, 7-11">
       </div>
       <div class="field">
         <label for="f-price">ราคา (บาท)</label>
@@ -561,13 +560,13 @@
         <input type="date" id="f-purchase">
       </div>
       <div class="field">
-        <label for="f-expiry">วันหมดอายุ (ถ้ามี)</label>
+        <label for="f-expiry">วันหมดอายุ / หมดประกัน</label>
         <input type="date" id="f-expiry">
       </div>
     </div>
     <div class="field">
-      <label for="f-notes">หมายเหตุ</label>
-      <textarea id="f-notes" placeholder="รายละเอียดเพิ่มเติม เช่น ขนาด รุ่น"></textarea>
+      <label for="f-notes">รายละเอียดเพิ่มเติม</label>
+      <textarea id="f-notes" placeholder="เช่น สเปกเบรกเกอร์ Deye, ใช้กับรถคันไหน, หรือข้อควรระวัง"></textarea>
     </div>
     <div class="form-actions">
       <button class="btn-cancel" id="cancelBtn" type="button">ยกเลิก</button>
@@ -594,7 +593,7 @@
 
 <script>
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzNgdJEnRY6e48IHD62QXN0AamSHL_qrbI82aKTacrn14qfLaNhAK1QcdDcvyksIN4_/exec';
-const DEFAULT_CATEGORIES = ['หลอดไฟ','สวิตซ์ไฟ','ท่อน้ำ','ก๊อกน้ำ','ปลั๊ก/สายไฟ','กุญแจ/บานพับ','อื่นๆ'];
+const DEFAULT_CATEGORIES = ['อาหาร/ของสด','ของใช้ในบ้าน','เครื่องใช้ไฟฟ้า/สมาร์ทโฮม','อะไหล่รถยนต์','เครื่องมือช่าง/ประปา','อื่นๆ'];
 
 let items = [];
 let categories = [];
@@ -605,7 +604,7 @@ let collapsedGroups = new Set();
 
 const $ = (id) => document.getElementById(id);
 
-// --- Google Sheet backend (via Apps Script Web App) ---
+// --- Google Sheet backend ---
 async function fetchAllFromSheet(){
   const res = await fetch(APPS_SCRIPT_URL, { method: 'GET' });
   if(!res.ok) throw new Error('HTTP ' + res.status);
@@ -742,7 +741,7 @@ function hideStatusError(){
 
 async function testStorageConnection(){
   if(!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf('script.google.com') === -1){
-    showStatusError('ยังไม่ได้ตั้งค่าลิงก์ Google Apps Script — กรุณาใส่ APPS_SCRIPT_URL ในโค้ด', 'APPS_SCRIPT_URL not configured');
+    showStatusError('ยังไม่ได้ตั้งค่าลิงก์ Google Apps Script', 'APPS_SCRIPT_URL not configured');
     return false;
   }
   try{
@@ -750,7 +749,7 @@ async function testStorageConnection(){
     hideStatusError();
     return true;
   }catch(err){
-    showStatusError('เชื่อมต่อ Google Sheet ไม่ได้ ข้อมูลจะไม่ถูกบันทึกถาวร — ตรวจสอบว่า deploy เป็น Web App แบบ "Anyone" แล้ว และลิงก์ถูกต้อง', err && err.message ? err.message : String(err));
+    showStatusError('เชื่อมต่อ Google Sheet ไม่ได้', err && err.message ? err.message : String(err));
     return false;
   }
 }
@@ -832,9 +831,9 @@ function renderBanner(){
   }
   banner.classList.add('show');
   const parts = [];
-  if(expired.length) parts.push(`หมดอายุแล้ว ${expired.length} รายการ`);
-  if(expiring.length) parts.push(`ใกล้หมดอายุ ${expiring.length} รายการ`);
-  $('bannerTitle').textContent = 'ควรตรวจสอบของในสต๊อก';
+  if(expired.length) parts.push(`หมดอายุ/ประกันแล้ว ${expired.length} รายการ`);
+  if(expiring.length) parts.push(`ใกล้หมดอายุ/ประกัน ${expiring.length} รายการ`);
+  $('bannerTitle').textContent = 'แจ้งเตือนสถานะของใช้';
   $('bannerBody').textContent = parts.join(' · ') + ' — แตะรายการเพื่อดูรายละเอียด';
 }
 
@@ -857,8 +856,8 @@ function render(){
 
   if(items.length === 0){
     main.innerHTML = `<div class="empty-state">
-      <h3>ยังไม่มีของในสต๊อก</h3>
-      <p>เริ่มเพิ่มอะไหล่ชิ้นแรกที่คุณสำรองไว้ที่บ้าน</p>
+      <h3>ยังไม่มีรายการในคลัง</h3>
+      <p>เริ่มเพิ่มของใช้ อาหาร หรืออะไหล่ชิ้นแรกของคุณ</p>
     </div>`;
     return;
   }
@@ -908,9 +907,9 @@ function renderItemCard(item, cardClass, status){
   if(item.expiryDate){
     const days = daysUntil(item.expiryDate);
     let cls = 'tag';
-    let label = `หมดอายุ ${formatDate(item.expiryDate)}`;
-    if(status === 'expired'){ cls += ' expiry-danger'; label = `หมดอายุแล้ว (${formatDate(item.expiryDate)})`; }
-    else if(status === 'expiring'){ cls += ' expiry-warn'; label = `ใกล้หมดอายุ · เหลือ ${days} วัน`; }
+    let label = `หมดอายุ/ประกัน ${formatDate(item.expiryDate)}`;
+    if(status === 'expired'){ cls += ' expiry-danger'; label = `หมดอายุ/ประกันแล้ว (${formatDate(item.expiryDate)})`; }
+    else if(status === 'expiring'){ cls += ' expiry-warn'; label = `ใกล้หมดอายุ/ประกัน · เหลือ ${days} วัน`; }
     expiryTag = `<span class="${cls}">${label}</span>`;
   }
   const priceText = item.price ? `฿${Number(item.price).toLocaleString('th-TH')}` : null;
@@ -1099,7 +1098,7 @@ $('exportBtn').addEventListener('click', () => {
   const a = document.createElement('a');
   const dateStr = new Date().toISOString().slice(0,10);
   a.href = url;
-  a.download = `คลังอะไหล่บ้าน-สำรอง-${dateStr}.json`;
+  a.download = `คลังของใช้ในบ้าน-สำรอง-${dateStr}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
